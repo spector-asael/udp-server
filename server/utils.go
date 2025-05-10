@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"net"
+	"time"
 )
 
 func handleClientMessage(conn *net.UDPConn, message clientMessage, clientAddr *net.UDPAddr) {
@@ -32,6 +33,9 @@ func handleClientMessage(conn *net.UDPConn, message clientMessage, clientAddr *n
 		}
 
 	case "content":
+		// Wait for 1-2 seconds to ensure all data is received
+		time.Sleep(2 * time.Second)
+
 		// Broadcast the message to all connected clients
 		for id, addr := range connectedClients {
 			if id != message.ID { // Don't send the message back to the sender
