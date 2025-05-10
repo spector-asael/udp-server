@@ -64,23 +64,77 @@ func initiateConnection(username string, userID string) {
 
 	fmt.Println("Connected to server at", addr.String())
 
-	// Example send message
-	message := clientMessage{
+	// Send an initial connection message
+	initialMessage := clientMessage{
 		ID:       userID,
 		Username: username,
 		IP:       fmt.Sprintf("%v", addr),
 		Port:     port,
-		message:  "Hello from client!",
+		Type:     "ping",               // Initial message type
+		Message:  "Hello from client!", // Updated field name
 	}
 
-	data, err := json.Marshal(message)
+	data, err := json.Marshal(initialMessage)
 	if err != nil {
-		fmt.Println("Failed to marshal message:", err)
+		fmt.Println("Failed to marshal initial message:", err)
 		return
 	}
 
 	_, err = conn.Write(data)
 	if err != nil {
-		fmt.Println("Failed to send message:", err)
+		fmt.Println("Failed to send initial message:", err)
+		return
+	}
+
+	// Start the message loop
+	startMessageLoop(conn, username, userID, addr, port)
+}
+
+func startMessageLoop(conn *net.UDPConn, username, userID string, addr *net.UDPAddr, port string) {
+	// Start a goroutine to listen for incoming messages
+	go func() {
+		buffer := make([]byte, 1024)
+		for {
+			n, _, err := conn.ReadFromUDP(buffer)
+			if err != nil {
+				fmt.Println("Error reading from server:", err)
+				return
+			}
+			fmt.Println(string(buffer[:n]))
+		}
+	}()
+
+	// Print the prompt once
+	fmt.Println("Enter your message (or type 'exit' to quit):")
+
+	// Main loop to send messages
+	for {
+		var input string
+		fmt.Scanln(&input)
+
+		if input == "exit" {
+			fmt.Println("Exiting chat...")
+			break
+		}
+
+		message := clientMessage{
+			ID:       userID,
+			Username: username,
+			IP:       fmt.Sprintf("%v", addr),
+			Port:     port,
+			Type:     "content", // Message type
+			Message:  input,     // Updated field name
+		}
+
+		data, err := json.Marshal(message)
+		if err != nil {
+			fmt.Println("Failed to marshal message:", err)
+			continue
+		}
+
+		_, err = conn.Write(data)
+		if err != nil {
+			fmt.Println("Failed to send message:", err)
+		}
 	}
 }

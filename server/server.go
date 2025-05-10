@@ -13,7 +13,10 @@ type clientMessage struct {
 	IP       string
 	Port     string
 	Message  string // Note: Capitalized field name to match JSON unmarshaling
+	Type     string // "ping" or "content"
 }
+
+var connectedClients = make(map[string]*net.UDPAddr)
 
 func StartServer() {
 	var port string
@@ -51,7 +54,7 @@ func StartServer() {
 			continue
 		}
 
-		// Print the decoded message
-		fmt.Printf("Received from %s: %+v\n", clientAddr, message)
+		// Pass conn to handleClientMessage
+		handleClientMessage(conn, message, clientAddr)
 	}
 }
