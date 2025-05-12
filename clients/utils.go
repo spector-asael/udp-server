@@ -2,12 +2,15 @@ package clients
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"math/rand"
+	"net"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func generateDefaultUsername() string {
@@ -45,4 +48,21 @@ func updateUsername() string {
 
 		return newUsername
 	}
+}
+
+func startHeartbeat(conn *net.UDPConn, addr *net.UDPAddr, id, username string) {
+	ticker := time.NewTicker(10 * time.Second)
+	go func() {
+		for range ticker.C {
+			msg := clientMessage{
+				ID:       id,
+				Username: username,
+				IP:       addr.IP.String(),
+				Port:     fmt.Sprint(addr.Port),
+				Type:     "ping",
+			}
+			data, _ := json.Marshal(msg)
+			conn.WriteToUDP(data, addr)
+		}
+	}()
 }
