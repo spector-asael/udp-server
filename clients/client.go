@@ -86,6 +86,7 @@ func initiateConnection(username string, userID string) {
 		return
 	}
 
+	go startHeartbeat(conn, addr, userID, username)
 	// Start the message loop
 	startMessageLoop(conn, username, userID, addr, port)
 }
