@@ -22,6 +22,7 @@ func main() {
 		switch choice {
 		case "1":
 			// handle starting the server
+
 			server.StartServer()
 
 		case "2":
